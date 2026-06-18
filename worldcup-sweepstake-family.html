@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 — Family Sweepstake</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --pitch:#1a472a;--gold:#f0b429;--gold-light:#ffd166;--chalk:#f5f5f0;
+    --dark:#111614;--mid:#2a3530;--muted:#7a8078;
+    --red:#e63946;--green:#43aa8b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:var(--chalk);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;}
+
+  /* ── Header ── */
+  .header{background:linear-gradient(135deg,var(--pitch) 0%,#0d2b1a 100%);border-bottom:3px solid var(--gold);padding:18px 16px 14px;text-align:center;position:sticky;top:0;z-index:100;}
+  .header-title{font-family:'Bebas Neue',sans-serif;font-size:2.1rem;letter-spacing:.06em;color:var(--gold);line-height:1;}
+  .header-sub{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+
+  /* ── Sync bar ── */
+  .sync-bar{background:#0d1f13;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--mid);gap:8px;}
+  .sync-status{font-size:.7rem;color:var(--muted);}
+  .sync-status.ok{color:var(--green);}
+  .sync-status.err{color:var(--red);}
+  .sync-btn{background:var(--gold);color:var(--dark);border:none;border-radius:5px;padding:5px 12px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;}
+  .sync-btn:disabled{opacity:.5;cursor:default;}
+
+  /* ── Tabs ── */
+  .tabs{display:flex;background:#0d1f13;border-bottom:1px solid var(--mid);overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:1;min-width:70px;padding:11px 6px;text-align:center;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;white-space:nowrap;}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .tab:hover:not(.active){color:var(--chalk);}
+
+  .main{padding:14px;max-width:700px;margin:0 auto;}
+  .card{background:#1e2822;border:1px solid var(--mid);border-radius:8px;padding:14px;margin-bottom:12px;}
+  .card-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;color:var(--gold);margin-bottom:10px;}
+
+  /* ── Leaderboard ── */
+  /* cols: pos | name | W | D | L | GD | Raw | Comp | Adj */
+  .lb-grid{display:grid;grid-template-columns:26px 1fr 28px 28px 28px 32px 38px 44px 44px;align-items:center;gap:2px;padding:9px 5px;border-radius:6px;margin-bottom:2px;font-size:.75rem;}
+  .lb-hdr{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:3px 5px;margin-bottom:4px;font-weight:600;}
+  .lb-pos{font-weight:700;color:var(--muted);text-align:center;}
+  .lb-pos.g{color:#f0b429;}.lb-pos.s{color:#c0c0c0;}.lb-pos.b{color:#cd7f32;}
+  .lb-name{font-weight:600;font-size:.82rem;display:flex;align-items:center;gap:4px;cursor:pointer;}
+  .lb-name:hover{color:var(--gold-light);}
+  .lb-num{text-align:center;color:var(--muted);}
+  .lb-raw{text-align:center;font-weight:600;font-size:.82rem;color:var(--muted);}
+  .lb-comp{text-align:center;font-size:.75rem;color:#7addc7;}
+  .lb-pts{text-align:center;font-weight:700;font-size:.9rem;color:var(--gold);}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .comp-badge{font-size:.58rem;background:rgba(67,170,139,.2);color:#7addc7;border-radius:3px;padding:1px 4px;font-weight:600;white-space:nowrap;}
+
+  /* ── Player expand panel ── */
+  .player-expand{display:none;background:#111814;border-top:1px solid var(--mid);border-radius:0 0 6px 6px;overflow:hidden;margin-bottom:6px;}
+  .player-expand.open{display:block;}
+  .expand-header{padding:8px 12px;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;display:grid;grid-template-columns:1fr 28px 28px 28px 32px 28px 28px 34px;gap:4px;border-bottom:1px solid var(--mid);}
+  .expand-row{display:grid;grid-template-columns:1fr 28px 28px 28px 32px 28px 28px 34px;gap:4px;padding:7px 12px;border-bottom:1px solid #1a2018;font-size:.76rem;align-items:center;}
+  .expand-row:last-child{border-bottom:none;}
+  .expand-row.elim{opacity:.38;text-decoration:line-through;}
+  .expand-team{display:flex;align-items:center;gap:5px;}
+  .expand-num{text-align:center;color:var(--muted);}
+  .expand-pts{text-align:center;font-weight:700;color:var(--gold);}
+  .expand-gd{text-align:center;}
+  .tier-tag{font-size:.56rem;padding:1px 4px;border-radius:3px;font-weight:600;text-transform:uppercase;flex-shrink:0;}
+  .t1{background:rgba(230,57,70,.22);color:#ff8a92;}
+  .t2{background:rgba(74,144,217,.22);color:#90c4f5;}
+  .t3{background:rgba(67,170,139,.22);color:#7addc7;}
+  .t4{background:rgba(244,132,95,.22);color:#ffc4ae;}
+  .t5{background:rgba(155,93,229,.22);color:#d0aaff;}
+
+  /* ── Teams grid ── */
+  .teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:480px){.teams-grid{grid-template-columns:1fr;}}
+  @media(min-width:680px){.teams-grid{grid-template-columns:1fr 1fr 1fr;}}
+  .player-pool{background:#161d1a;border-radius:8px;overflow:hidden;}
+  .pool-header{padding:9px 12px;font-weight:700;font-size:.83rem;display:flex;align-items:center;gap:7px;}
+  .pool-pts{margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--gold);}
+  .team-row{display:flex;align-items:center;gap:5px;padding:6px 10px;border-top:1px solid #1e2822;font-size:.76rem;}
+  .team-row.elim{opacity:.35;text-decoration:line-through;}
+  .team-flag{font-size:1rem;}
+  .team-name{flex:1;}
+  .team-pts{font-weight:700;color:var(--gold);min-width:22px;text-align:right;}
+  .grp{font-size:.58rem;background:rgba(255,255,255,.07);color:var(--muted);border-radius:3px;padding:1px 4px;font-weight:600;}
+
+  /* ── Fixtures ── */
+  .fix-day{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.06em;color:var(--gold);padding:10px 0 4px;border-bottom:1px solid var(--mid);margin-bottom:6px;}
+  .fix-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1a2018;gap:6px;font-size:.78rem;}
+  .fix-row:last-child{border-bottom:none;}
+  .fix-teams{flex:1;}
+  .fix-line{display:flex;align-items:center;gap:5px;}
+  .fix-owner{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .fix-score{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--gold);min-width:44px;text-align:center;}
+  .fix-pending{font-size:.7rem;color:var(--muted);min-width:44px;text-align:center;}
+  .fix-stage{font-size:.63rem;color:var(--muted);margin-top:3px;}
+
+  /* ── Misc ── */
+  .notice{background:#1a2a1e;border:1px solid rgba(240,180,41,.35);border-radius:6px;padding:9px 12px;font-size:.76rem;color:var(--chalk);margin-bottom:12px;line-height:1.55;}
+  .stat-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .stat-pill{background:#111614;border:1px solid var(--mid);border-radius:20px;padding:3px 9px;font-size:.7rem;color:var(--muted);}
+  .stat-pill strong{color:var(--chalk);}
+  .empty{color:var(--muted);font-size:.8rem;text-align:center;padding:18px;}
+  .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--muted);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .chevron{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .2s;}
+  .chevron.open{transform:rotate(180deg);}
+  .comp-inactive{color:var(--muted);font-size:.72rem;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">⚽ World Cup 2026</div>
+  <div class="header-sub">Family Sweepstake · 48 Teams · 6 Players</div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-status" id="sync-status">Not yet synced</div>
+  <button class="sync-btn" id="sync-btn" onclick="fetchScores()">🔄 Refresh Scores</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('leaderboard')">🏆 Board</div>
+  <div class="tab" onclick="showTab('teams')">👕 Teams</div>
+  <div class="tab" onclick="showTab('fixtures')">📅 Fixtures</div>
+</div>
+
+<div class="main">
+
+  <!-- LEADERBOARD -->
+  <div id="tab-leaderboard">
+    <div class="notice" id="comp-notice"></div>
+    <div class="card">
+      <div class="card-title">🏆 Leaderboard</div>
+      <div class="lb-grid lb-hdr">
+        <div></div><div>Player</div>
+        <div class="lb-num">W</div><div class="lb-num">D</div><div class="lb-num">L</div>
+        <div class="lb-num">GD</div>
+        <div class="lb-raw">Raw</div>
+        <div class="lb-comp">Comp</div>
+        <div class="lb-pts">Total</div>
+      </div>
+      <div id="leaderboard-rows"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 At a Glance</div>
+      <div id="glance"></div>
+    </div>
+  </div>
+
+  <!-- TEAMS -->
+  <div id="tab-teams" style="display:none">
+    <div class="teams-grid" id="teams-grid"></div>
+  </div>
+
+  <!-- FIXTURES -->
+  <div id="tab-fixtures" style="display:none">
+    <div class="card">
+      <div class="card-title">📅 Fixtures & Results</div>
+      <div id="fixtures-list"><div class="empty">Tap Refresh Scores to load fixtures.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// PLAYERS
+// ═══════════════════════════════════════════════
+const PLAYERS = [
+  {id:'mummy',  name:'Mummy',         color:'#e63946'},
+  {id:'daddy',  name:'Daddy',         color:'#4a90d9'},
+  {id:'eldest', name:'K Bear',         color:'#43aa8b'},
+  {id:'middle', name:'L Bear',         color:'#f4845f'},
+  {id:'boy',    name:'Little Boy',    color:'#9b5de5'},
+  {id:'granny', name:'Granny',        color:'#06d6a0'},
+];
+
+// ═══════════════════════════════════════════════
+// FLAGS & TEAMS (names match openfootball JSON)
+// ═══════════════════════════════════════════════
+const FLAGS = {
+  'France':'🇫🇷','Spain':'🇪🇸','England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Portugal':'🇵🇹','Argentina':'🇦🇷','Brazil':'🇧🇷',
+  'Germany':'🇩🇪','Netherlands':'🇳🇱','Belgium':'🇧🇪','Norway':'🇳🇴','USA':'🇺🇸','Colombia':'🇨🇴',
+  'Morocco':'🇲🇦','Japan':'🇯🇵','Mexico':'🇲🇽','Uruguay':'🇺🇾','Switzerland':'🇨🇭','Croatia':'🇭🇷',
+  'Turkey':'🇹🇷','Ecuador':'🇪🇨','Senegal':'🇸🇳','Austria':'🇦🇹','Canada':'🇨🇦','Paraguay':'🇵🇾',
+  'Sweden':'🇸🇪','Ivory Coast':'🇨🇮','Egypt':'🇪🇬','South Korea':'🇰🇷','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Algeria':'🇩🇿','Bosnia & Herzegovina':'🇧🇦','Ghana':'🇬🇭','Australia':'🇦🇺','Iran':'🇮🇷',
+  'Tunisia':'🇹🇳','DR Congo':'🇨🇩','New Zealand':'🇳🇿','Qatar':'🇶🇦','South Africa':'🇿🇦',
+  'Cape Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Iraq':'🇮🇶','Jordan':'🇯🇴','Uzbekistan':'🇺🇿',
+  'Czech Republic':'🇨🇿','Haiti':'🇭🇹','Panama':'🇵🇦','Curaçao':'🇨🇼',
+};
+
+const ALL_TEAMS = [
+  // T1 — Favourites
+  {name:'France',               group:'I', tier:1, odds:'+450'},
+  {name:'Spain',                group:'H', tier:1, odds:'+450'},
+  {name:'England',              group:'L', tier:1, odds:'+700'},
+  {name:'Portugal',             group:'K', tier:1, odds:'+700'},
+  {name:'Argentina',            group:'J', tier:1, odds:'+900'},
+  {name:'Brazil',               group:'C', tier:1, odds:'+900'},
+  {name:'Germany',              group:'E', tier:1, odds:'14-1'},
+  {name:'Netherlands',          group:'F', tier:1, odds:'18-1'},
+  {name:'Belgium',              group:'G', tier:1, odds:'22-1'},
+  {name:'Norway',               group:'I', tier:1, odds:'25-1'},
+  // T2 — Strong contenders
+  {name:'USA',                  group:'D', tier:2, odds:'33-1'},
+  {name:'Colombia',             group:'K', tier:2, odds:'40-1'},
+  {name:'Morocco',              group:'C', tier:2, odds:'60-1'},
+  {name:'Japan',                group:'F', tier:2, odds:'45-1'},
+  {name:'Mexico',               group:'A', tier:2, odds:'55-1'},
+  {name:'Uruguay',              group:'H', tier:2, odds:'66-1'},
+  {name:'Switzerland',          group:'B', tier:2, odds:'66-1'},
+  {name:'Croatia',              group:'L', tier:2, odds:'70-1'},
+  {name:'Turkey',               group:'D', tier:2, odds:'80-1'},
+  {name:'Ecuador',              group:'E', tier:2, odds:'100-1'},
+  // T3 — Dark horses
+  {name:'Senegal',              group:'I', tier:3, odds:'125-1'},
+  {name:'Austria',              group:'J', tier:3, odds:'125-1'},
+  {name:'Canada',               group:'B', tier:3, odds:'150-1'},
+  {name:'Paraguay',             group:'D', tier:3, odds:'150-1'},
+  {name:'Sweden',               group:'F', tier:3, odds:'175-1'},
+  {name:'Ivory Coast',          group:'E', tier:3, odds:'175-1'},
+  {name:'Egypt',                group:'G', tier:3, odds:'200-1'},
+  {name:'South Korea',          group:'A', tier:3, odds:'200-1'},
+  {name:'Scotland',             group:'C', tier:3, odds:'200-1'},
+  {name:'Algeria',              group:'J', tier:3, odds:'200-1'},
+  // T4 — Longshots
+  {name:'Bosnia & Herzegovina', group:'B', tier:4, odds:'250-1'},
+  {name:'Ghana',                group:'L', tier:4, odds:'250-1'},
+  {name:'Australia',            group:'D', tier:4, odds:'500-1'},
+  {name:'Iran',                 group:'G', tier:4, odds:'500-1'},
+  {name:'Tunisia',              group:'F', tier:4, odds:'500-1'},
+  {name:'DR Congo',             group:'K', tier:4, odds:'500-1'},
+  {name:'Czech Republic',       group:'A', tier:4, odds:'200-1'},
+  {name:'South Africa',         group:'A', tier:4, odds:'1000-1'},
+  {name:'New Zealand',          group:'G', tier:4, odds:'1000-1'},
+  {name:'Qatar',                group:'B', tier:4, odds:'1000-1'},
+  // T5 — Makeweights
+  {name:'Cape Verde',           group:'H', tier:5, odds:'1000-1'},
+  {name:'Saudi Arabia',         group:'H', tier:5, odds:'1000-1'},
+  {name:'Iraq',                 group:'I', tier:5, odds:'1000-1'},
+  {name:'Jordan',               group:'J', tier:5, odds:'1000-1'},
+  {name:'Uzbekistan',           group:'K', tier:5, odds:'1000-1'},
+  {name:'Haiti',                group:'C', tier:5, odds:'2500-1'},
+  {name:'Panama',               group:'L', tier:5, odds:'1000-1'},
+  {name:'Curaçao',              group:'E', tier:5, odds:'2500-1'},
+];
+
+// ═══════════════════════════════════════════════
+// SEEDED DRAW
+// ═══════════════════════════════════════════════
+function seededShuffle(arr, seed) {
+  const a=[...arr]; let s=seed;
+  for(let i=a.length-1;i>0;i--){
+    s=(s*1664525+1013904223)&0xffffffff;
+    const j=Math.abs(s)%(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildDraw() {
+  const assign={};
+  PLAYERS.forEach(p=>assign[p.id]=[]);
+  // Carry a single round-robin pointer ACROSS tiers (don't reset per tier).
+  // This rotates which players get the "extra" team in tiers that don't
+  // divide evenly by player count, so no player is systematically favoured
+  // by always landing the leftover slot in the same tier.
+  let ptr = 0;
+  [1,2,3,4,5].forEach(tier=>{
+    const inTier=ALL_TEAMS.filter(t=>t.tier===tier);
+    const shuffled=seededShuffle(inTier, 20260611+tier*97);
+    shuffled.forEach((team,i)=>{
+      const player = PLAYERS[(ptr+i) % PLAYERS.length];
+      assign[player.id].push(team.name);
+    });
+    ptr += inTier.length;
+  });
+  return assign;
+}
+
+const DRAW = buildDraw();
+
+// Compensation mechanism (kept for resilience, inactive when team counts
+// are already even — e.g. with 6 players and 48 teams, everyone gets
+// exactly 8 and COMP_PLAYERS will be empty).
+const teamCounts = PLAYERS.map(p=>({id:p.id, count:DRAW[p.id].length}));
+const maxTeams = Math.max(...teamCounts.map(x=>x.count));
+const COMP_PLAYERS = new Set(teamCounts.filter(x=>x.count<maxTeams).map(x=>x.id));
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let liveMatches = [];
+let eliminated = JSON.parse(localStorage.getItem('wc26-elim') || '[]');
+let expandedPlayer = null; // which player row is expanded in leaderboard
+
+function saveState() {
+  localStorage.setItem('wc26-elim', JSON.stringify(eliminated));
+}
+
+// ═══════════════════════════════════════════════
+// FETCH SCORES
+// ═══════════════════════════════════════════════
+async function fetchScores() {
+  const btn = document.getElementById('sync-btn');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  status.className = 'sync-status';
+  status.innerHTML = '<span class="spinner"></span> Fetching…';
+
+  try {
+    const url = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+    const resp = await fetch(url, {cache:'no-cache'});
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    liveMatches = (data.matches || []).filter(m =>
+      ALL_TEAMS.some(t=>t.name===m.team1) &&
+      ALL_TEAMS.some(t=>t.name===m.team2)
+    );
+
+    const ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('wc26-matches', JSON.stringify(liveMatches));
+    localStorage.setItem('wc26-sync', ts);
+    status.textContent = '✓ Updated at ' + ts;
+    status.className = 'sync-status ok';
+  } catch(e) {
+    status.textContent = '⚠ Fetch failed — using cached data';
+    status.className = 'sync-status err';
+    const cached = localStorage.getItem('wc26-matches');
+    if (cached) liveMatches = JSON.parse(cached);
+  }
+
+  btn.disabled = false;
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════
+// SCORING ENGINE
+// ═══════════════════════════════════════════════
+function computeTeamStats() {
+  const stats = {};
+  ALL_TEAMS.forEach(t => { stats[t.name]={w:0,d:0,l:0,gf:0,ga:0,pts:0}; });
+  liveMatches.forEach(m => {
+    if (!m.score || !m.score.ft) return;
+    const [ga, gb] = m.score.ft;
+    const a=m.team1, b=m.team2;
+    if (!stats[a] || !stats[b]) return;
+    stats[a].gf+=ga; stats[a].ga+=gb;
+    stats[b].gf+=gb; stats[b].ga+=ga;
+    if (ga>gb)      { stats[a].w++; stats[a].pts+=3; stats[b].l++; }
+    else if (ga===gb){ stats[a].d++; stats[a].pts+=1; stats[b].d++; stats[b].pts+=1; }
+    else             { stats[b].w++; stats[b].pts+=3; stats[a].l++; }
+  });
+  return stats;
+}
+
+// ═══════════════════════════════════════════════
+// COMPENSATION — stops when comp player's active
+// teams >= max active teams among non-comp players
+// Bonus = leagueAvgPtsPerTeam × shortfall in active teams
+// ═══════════════════════════════════════════════
+function computeLeagueAvg(teamStats) {
+  const all = ALL_TEAMS.map(t => teamStats[t.name]?.pts || 0);
+  return all.reduce((s,v)=>s+v,0) / all.length;
+}
+
+function computeCompBonus(playerId, playerActive, nonCompMaxActive, leagueAvg) {
+  if (!COMP_PLAYERS.has(playerId)) return 0;
+  const shortfall = nonCompMaxActive - playerActive;
+  if (shortfall <= 0) return 0; // playing field is level — no bonus needed
+  return leagueAvg * shortfall;
+}
+
+function computePlayerStats(teamStats) {
+  // First pass: get active counts
+  const activeCounts = {};
+  PLAYERS.forEach(p => {
+    activeCounts[p.id] = DRAW[p.id].filter(t => !eliminated.includes(t)).length;
+  });
+
+  // Max active among non-comp players
+  const nonCompMaxActive = Math.max(
+    ...PLAYERS.filter(p => !COMP_PLAYERS.has(p.id)).map(p => activeCounts[p.id])
+  );
+
+  const leagueAvg = computeLeagueAvg(teamStats);
+
+  return PLAYERS.map(p => {
+    const teams = DRAW[p.id];
+    let w=0,d=0,l=0,gf=0,ga=0,rawPts=0;
+    teams.forEach(t => {
+      const s=teamStats[t];
+      if(s){w+=s.w;d+=s.d;l+=s.l;gf+=s.gf;ga+=s.ga;rawPts+=s.pts;}
+    });
+    const active = activeCounts[p.id];
+    const bonus = computeCompBonus(p.id, active, nonCompMaxActive, leagueAvg);
+    const bonusActive = COMP_PLAYERS.has(p.id) && bonus === 0; // comp player but bonus inactive
+    const adjustedPts = rawPts + bonus;
+    return {
+      ...p, w, d, l, gf, ga, gd:gf-ga,
+      rawPts, bonus, bonusActive, adjustedPts, active,
+      isComp: COMP_PLAYERS.has(p.id)
+    };
+  }).sort((a,b) => {
+    if (b.adjustedPts !== a.adjustedPts) return b.adjustedPts - a.adjustedPts;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER LEADERBOARD
+// ═══════════════════════════════════════════════
+function renderLeaderboard() {
+  const tStats = computeTeamStats();
+  const players = computePlayerStats(tStats);
+
+  // Compensation notice — only shown if the draw actually produced uneven team counts
+  const noticeEl = document.getElementById('comp-notice');
+  if (COMP_PLAYERS.size === 0) {
+    noticeEl.style.display = 'none';
+  } else {
+    noticeEl.style.display = '';
+    const compNames = PLAYERS.filter(p=>COMP_PLAYERS.has(p.id))
+      .map(p=>`<span style="color:${p.color}">${p.name}</span>`).join(' & ');
+    const leagueAvg = computeLeagueAvg(tStats);
+    noticeEl.innerHTML =
+      `<strong>Compensation:</strong> ${compNames} drew fewer teams than the others. Each receives a bonus equal to the league average pts/team × their active-team shortfall vs the leading player. Bonus stops automatically once the playing field is level. Current league avg: <strong>${leagueAvg.toFixed(2)} pts/team</strong>.`;
+  }
+
+  const rows = document.getElementById('leaderboard-rows');
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
+
+  rows.innerHTML = players.map((p,i) => {
+    const posClass = i===0?'g':i===1?'s':i===2?'b':'';
+    const isOpen = expandedPlayer === p.id;
+
+    // Comp column display
+    let compDisplay;
+    if (!p.isComp) {
+      compDisplay = `<div class="lb-comp">—</div>`;
+    } else if (p.bonus === 0) {
+      compDisplay = `<div class="lb-comp comp-inactive" title="Bonus inactive — playing field is level">0</div>`;
+    } else {
+      compDisplay = `<div class="lb-comp">+${p.bonus.toFixed(1)}</div>`;
+    }
+
+    // Team detail expand
+    const teamRows = DRAW[p.id]
+      .map(name => {
+        const info = ALL_TEAMS.find(t=>t.name===name);
+        const s = tStats[name]||{w:0,d:0,l:0,gf:0,ga:0,pts:0};
+        const isOut = eliminated.includes(name);
+        const gd = s.gf - s.ga;
+        return `<div class="expand-row ${isOut?'elim':''}">
+          <div class="expand-team">
+            <span>${FLAGS[name]||'⚽'}</span>
+            <span>${name}</span>
+            <span class="tier-tag t${info.tier}">T${info.tier}</span>
+          </div>
+          <div class="expand-num">${s.w}</div>
+          <div class="expand-num">${s.d}</div>
+          <div class="expand-num">${s.l}</div>
+          <div class="expand-gd" style="color:${gd>=0?'#7addc7':'#ff8a92'}">${gd>=0?'+':''}${gd}</div>
+          <div class="expand-num">${s.gf}</div>
+          <div class="expand-num">${s.ga}</div>
+          <div class="expand-pts">${s.pts}</div>
+        </div>`;
+      })
+      .sort((a,b)=>0) // already sorted by tier above
+      .join('');
+
+    return `
+      <div class="lb-grid" style="background:${i===0?'rgba(240,180,41,.07)':'transparent'};cursor:pointer" onclick="toggleExpand('${p.id}')">
+        <div class="lb-pos ${posClass}">${medals[i] || (i+1)}</div>
+        <div class="lb-name">
+          <span class="dot" style="background:${p.color}"></span>
+          ${p.name}
+          <span class="chevron ${isOpen?'open':''}">▾</span>
+        </div>
+        <div class="lb-num">${p.w}</div>
+        <div class="lb-num">${p.d}</div>
+        <div class="lb-num">${p.l}</div>
+        <div class="lb-num" style="color:${p.gd>=0?'#7addc7':'#ff8a92'}">${p.gd>=0?'+':''}${p.gd}</div>
+        <div class="lb-raw">${p.rawPts}</div>
+        ${compDisplay}
+        <div class="lb-pts">${p.adjustedPts.toFixed(1)}</div>
+      </div>
+      <div class="player-expand ${isOpen?'open':''}" id="expand-${p.id}">
+        <div class="expand-header">
+          <div>Team</div>
+          <div>W</div><div>D</div><div>L</div><div>GD</div>
+          <div>GF</div><div>GA</div><div>Pts</div>
+        </div>
+        ${teamRows}
+        ${p.isComp && p.bonus > 0 ? `
+        <div style="padding:7px 12px;font-size:.72rem;color:#7addc7;border-top:1px solid var(--mid);display:flex;justify-content:space-between;">
+          <span>Compensation bonus (${(p.bonus/computeLeagueAvg(tStats)).toFixed(0)} missing team × ${computeLeagueAvg(tStats).toFixed(2)} avg)</span>
+          <strong>+${p.bonus.toFixed(1)}</strong>
+        </div>` : ''}
+        ${p.isComp && p.bonus === 0 ? `
+        <div style="padding:7px 12px;font-size:.72rem;color:var(--muted);border-top:1px solid var(--mid);">
+          Compensation bonus: inactive (playing field is now level)
+        </div>` : ''}
+      </div>`;
+  }).join('');
+
+  // At a glance
+  const matchesPlayed = liveMatches.filter(m=>m.score&&m.score.ft).length;
+  const totalGoals = liveMatches.filter(m=>m.score&&m.score.ft)
+    .reduce((s,m)=>s+m.score.ft[0]+m.score.ft[1],0);
+  const leader = players[0];
+  const glanceLeagueAvg = computeLeagueAvg(tStats);
+  document.getElementById('glance').innerHTML = `<div class="stat-pills">
+    <div class="stat-pill">Matches played: <strong>${matchesPlayed}</strong></div>
+    <div class="stat-pill">Goals scored: <strong>${totalGoals}</strong></div>
+    <div class="stat-pill">Leader: <strong style="color:${leader.color}">${leader.name}</strong></div>
+    <div class="stat-pill">Active teams: <strong>${48-eliminated.length}/48</strong></div>
+    <div class="stat-pill">League avg/team: <strong>${glanceLeagueAvg.toFixed(2)}pts</strong></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// TOGGLE PLAYER EXPAND
+// ═══════════════════════════════════════════════
+function toggleExpand(playerId) {
+  expandedPlayer = expandedPlayer === playerId ? null : playerId;
+  renderLeaderboard();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER TEAMS
+// ═══════════════════════════════════════════════
+function renderTeams() {
+  const tStats = computeTeamStats();
+  const players = computePlayerStats(tStats);
+
+  document.getElementById('teams-grid').innerHTML = players.map(p => {
+    const teams = DRAW[p.id].map(name=>{
+      const info=ALL_TEAMS.find(t=>t.name===name);
+      const s=tStats[name]||{pts:0};
+      return {name,info,s,isOut:eliminated.includes(name)};
+    }).sort((a,b)=>a.info.tier-b.info.tier);
+
+    const pData = players.find(x=>x.id===p.id);
+
+    return `<div class="player-pool">
+      <div class="pool-header" style="background:${p.color}20;border-bottom:2px solid ${p.color}">
+        <span class="dot" style="background:${p.color}"></span>
+        <span style="color:${p.color}">${p.name}</span>
+        ${pData.isComp && pData.bonus>0?`<span style="font-size:.6rem;color:#7addc7">(+${pData.bonus.toFixed(1)})</span>`:''}
+        <span class="pool-pts">${pData.adjustedPts.toFixed(1)}pts</span>
+      </div>
+      ${teams.map(t=>`
+        <div class="team-row ${t.isOut?'elim':''}">
+          <span class="team-flag">${FLAGS[t.name]||'⚽'}</span>
+          <span class="team-name">${t.name}</span>
+          <span class="grp">Grp ${t.info.group}</span>
+          <span class="tier-tag t${t.info.tier}">T${t.info.tier}</span>
+          <span class="team-pts">${t.s.pts}</span>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RENDER FIXTURES
+// ═══════════════════════════════════════════════
+function renderFixtures() {
+  const el = document.getElementById('fixtures-list');
+  if (!liveMatches.length) {
+    el.innerHTML = '<div class="empty">Tap "Refresh Scores" above to load fixtures.</div>';
+    return;
+  }
+
+  const byDate = {};
+  liveMatches.forEach(m => {
+    const d=m.date||'Unknown';
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(m);
+  });
+
+  const ownerOf = name => PLAYERS.find(p=>DRAW[p.id].includes(name));
+
+  el.innerHTML = Object.keys(byDate).sort().map(date => {
+    const label = new Date(date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const matches = byDate[date].map(m => {
+      const oA=ownerOf(m.team1), oB=ownerOf(m.team2);
+      const hasScore = m.score && m.score.ft;
+      const scoreHtml = hasScore
+        ? `<div class="fix-score">${m.score.ft[0]} – ${m.score.ft[1]}</div>`
+        : `<div class="fix-pending">${m.time||'TBC'}</div>`;
+      return `<div class="fix-row">
+        <div class="fix-teams">
+          <div class="fix-line">
+            <span class="fix-owner" style="background:${oA?oA.color:'#555'}"></span>
+            ${FLAGS[m.team1]||'⚽'} ${m.team1}
+          </div>
+          <div class="fix-line" style="margin-top:3px">
+            <span class="fix-owner" style="background:${oB?oB.color:'#555'}"></span>
+            ${FLAGS[m.team2]||'⚽'} ${m.team2}
+          </div>
+          <div class="fix-stage">${m.round||''} · ${m.group||''} · ${m.ground||''}</div>
+        </div>
+        ${scoreHtml}
+      </div>`;
+    }).join('');
+    return `<div class="fix-day">${label}</div>${matches}`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TABS & RENDER ALL
+// ═══════════════════════════════════════════════
+function renderAll() {
+  renderLeaderboard();
+  renderTeams();
+  renderFixtures();
+}
+
+function showTab(tab) {
+  ['leaderboard','teams','fixtures'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab?'':'none';
+  });
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',['leaderboard','teams','fixtures'][i]===tab);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(function init() {
+  const cached = localStorage.getItem('wc26-matches');
+  if (cached) {
+    liveMatches = JSON.parse(cached);
+    const ts = localStorage.getItem('wc26-sync');
+    if (ts) {
+      document.getElementById('sync-status').textContent = '✓ Cached from ' + ts;
+      document.getElementById('sync-status').className = 'sync-status ok';
+    }
+    renderAll();
+  }
+  fetchScores();
+})();
+</script>
+</body>
+</html>
