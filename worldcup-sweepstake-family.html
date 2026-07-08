@@ -347,14 +347,29 @@ function computeTeamStats() {
   ALL_TEAMS.forEach(t => { stats[t.name]={w:0,d:0,l:0,gf:0,ga:0,pts:0}; });
   liveMatches.forEach(m => {
     if (!m.score || !m.score.ft) return;
-    const [ga, gb] = m.score.ft;
     const a=m.team1, b=m.team2;
     if (!stats[a] || !stats[b]) return;
+
+    // Determine which score to use for goals (GF/GA/GD):
+    // - If penalties (score.p exists): use ET score for goals, but penalties decide W/L
+    // - If extra time only (score.et, no score.p): use ET score for goals and W/L
+    // - Otherwise: use FT score
+    const goalScore = m.score.p ? m.score.et : (m.score.et ? m.score.et : m.score.ft);
+    const [ga, gb] = goalScore;
     stats[a].gf+=ga; stats[a].ga+=gb;
     stats[b].gf+=gb; stats[b].ga+=ga;
-    if (ga>gb)      { stats[a].w++; stats[a].pts+=3; stats[b].l++; }
-    else if (ga===gb){ stats[a].d++; stats[a].pts+=1; stats[b].d++; stats[b].pts+=1; }
-    else             { stats[b].w++; stats[b].pts+=3; stats[a].l++; }
+
+    if (m.score.p) {
+      // Decided by penalty shootout — winner gets 3pts, loser 0, no draw recorded
+      const [pa, pb] = m.score.p;
+      if (pa > pb) { stats[a].w++; stats[a].pts+=3; stats[b].l++; }
+      else         { stats[b].w++; stats[b].pts+=3; stats[a].l++; }
+    } else {
+      // Regulation or extra time (no shootout)
+      if (ga>gb)       { stats[a].w++; stats[a].pts+=3; stats[b].l++; }
+      else if (ga===gb) { stats[a].d++; stats[a].pts+=1; stats[b].d++; stats[b].pts+=1; }
+      else              { stats[b].w++; stats[b].pts+=3; stats[a].l++; }
+    }
   });
   return stats;
 }
@@ -592,9 +607,21 @@ function renderFixtures() {
     const matches = byDate[date].map(m => {
       const oA=ownerOf(m.team1), oB=ownerOf(m.team2);
       const hasScore = m.score && m.score.ft;
-      const scoreHtml = hasScore
-        ? `<div class="fix-score">${m.score.ft[0]} – ${m.score.ft[1]}</div>`
-        : `<div class="fix-pending">${m.time||'TBC'}</div>`;
+      let scoreHtml;
+      if (!hasScore) {
+        scoreHtml = `<div class="fix-pending">${m.time||'TBC'}</div>`;
+      } else {
+        const dispScore = m.score.p ? m.score.et : (m.score.et ? m.score.et : m.score.ft);
+        const [gs1, gs2] = dispScore;
+        let suffix = '';
+        if (m.score.p) {
+          const [ps1, ps2] = m.score.p;
+          suffix = `<div style="font-size:.62rem;color:var(--muted);margin-top:1px">${ps1}–${ps2} pens</div>`;
+        } else if (m.score.et) {
+          suffix = `<div style="font-size:.62rem;color:var(--muted);margin-top:1px">a.e.t.</div>`;
+        }
+        scoreHtml = `<div class="fix-score" style="text-align:center">${gs1} – ${gs2}${suffix}</div>`;
+      }
       return `<div class="fix-row">
         <div class="fix-teams">
           <div class="fix-line">
