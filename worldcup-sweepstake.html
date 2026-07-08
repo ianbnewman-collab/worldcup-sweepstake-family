@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Cup 2026 — Stanley's Own Sweepstake</title>
+<title>World Cup 2026 — Family Sweepstake</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
   :root {
@@ -113,7 +113,7 @@
 
 <div class="header">
   <div class="header-title">⚽ World Cup 2026</div>
-  <div class="header-sub">Stanley's Own · 48 Teams · 12 Players</div>
+  <div class="header-sub">Family Sweepstake · 48 Teams · 6 Players</div>
 </div>
 
 <div class="sync-bar">
@@ -170,18 +170,12 @@
 // PLAYERS
 // ═══════════════════════════════════════════════
 const PLAYERS = [
-  {id:'squirrels',  name:'Squirrels',      color:'#e63946'},
-  {id:'cadnam',     name:'Cadnam River',   color:'#4a90d9'},
-  {id:'bartley',    name:'Bartley Water',  color:'#43aa8b'},
-  {id:'zulu',       name:'Zulu',           color:'#f4845f'},
-  {id:'dyak',       name:'Dyak',           color:'#9b5de5'},
-  {id:'everett',    name:'Everett',        color:'#118ab2'},
-  {id:'king',       name:'King',           color:'#f0b429'},
-  {id:'explorers',  name:'Explorers',      color:'#ef476f'},
-  {id:'sosband',    name:'SOS Band',       color:'#7ec850'},
-  {id:'groupexec',  name:'Group Exec',     color:'#ff9f1c'},
-  {id:'youngpeople',name:'Young People',   color:'#a78bfa'},
-  {id:'parents',    name:'Parents',        color:'#06d6a0'},
+  {id:'mummy',  name:'Mummy',         color:'#e63946'},
+  {id:'daddy',  name:'Daddy',         color:'#4a90d9'},
+  {id:'eldest', name:'K Bear',         color:'#43aa8b'},
+  {id:'middle', name:'L Bear',         color:'#f4845f'},
+  {id:'boy',    name:'Little Boy',    color:'#9b5de5'},
+  {id:'granny', name:'Granny',        color:'#06d6a0'},
 ];
 
 // ═══════════════════════════════════════════════
@@ -301,11 +295,11 @@ const COMP_PLAYERS = new Set(teamCounts.filter(x=>x.count<maxTeams).map(x=>x.id)
 // STATE
 // ═══════════════════════════════════════════════
 let liveMatches = [];
-let eliminated = JSON.parse(localStorage.getItem('sos26-elim') || '[]');
+let eliminated = JSON.parse(localStorage.getItem('wc26-elim') || '[]');
 let expandedPlayer = null; // which player row is expanded in leaderboard
 
 function saveState() {
-  localStorage.setItem('sos26-elim', JSON.stringify(eliminated));
+  localStorage.setItem('wc26-elim', JSON.stringify(eliminated));
 }
 
 // ═══════════════════════════════════════════════
@@ -330,14 +324,14 @@ async function fetchScores() {
     );
 
     const ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    localStorage.setItem('sos26-matches', JSON.stringify(liveMatches));
-    localStorage.setItem('sos26-sync', ts);
+    localStorage.setItem('wc26-matches', JSON.stringify(liveMatches));
+    localStorage.setItem('wc26-sync', ts);
     status.textContent = '✓ Updated at ' + ts;
     status.className = 'sync-status ok';
   } catch(e) {
     status.textContent = '⚠ Fetch failed — using cached data';
     status.className = 'sync-status err';
-    const cached = localStorage.getItem('sos26-matches');
+    const cached = localStorage.getItem('wc26-matches');
     if (cached) liveMatches = JSON.parse(cached);
   }
 
@@ -669,10 +663,10 @@ function showTab(tab) {
 // INIT
 // ═══════════════════════════════════════════════
 (function init() {
-  const cached = localStorage.getItem('sos26-matches');
+  const cached = localStorage.getItem('wc26-matches');
   if (cached) {
     liveMatches = JSON.parse(cached);
-    const ts = localStorage.getItem('sos26-sync');
+    const ts = localStorage.getItem('wc26-sync');
     if (ts) {
       document.getElementById('sync-status').textContent = '✓ Cached from ' + ts;
       document.getElementById('sync-status').className = 'sync-status ok';
