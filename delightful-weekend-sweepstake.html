@@ -348,12 +348,9 @@ function computeTeamStats() {
     const a=m.team1, b=m.team2;
     if (!stats[a] || !stats[b]) return;
 
-    // Determine which score to use for goals (GF/GA/GD):
-    // - If penalties (score.p exists): use ET score for goals, but penalties decide W/L
-    // - If extra time only (score.et, no score.p): use ET score for goals and W/L
-    // - Otherwise: use FT score
-    const goalScore = m.score.p ? m.score.et : (m.score.et ? m.score.et : m.score.ft);
-    const [ga, gb] = goalScore;
+    // Goals/GD always use score.ft (the actual scoreline never changes).
+    // If score.p exists, penalties decide W/L (3pts winner, 0 loser — no draw).
+    const [ga, gb] = m.score.ft;
     stats[a].gf+=ga; stats[a].ga+=gb;
     stats[b].gf+=gb; stats[b].ga+=ga;
 
@@ -609,8 +606,7 @@ function renderFixtures() {
       if (!hasScore) {
         scoreHtml = `<div class="fix-pending">${m.time||'TBC'}</div>`;
       } else {
-        const dispScore = m.score.p ? m.score.et : (m.score.et ? m.score.et : m.score.ft);
-        const [gs1, gs2] = dispScore;
+        const [gs1, gs2] = m.score.ft;
         let suffix = '';
         if (m.score.p) {
           const [ps1, ps2] = m.score.p;
